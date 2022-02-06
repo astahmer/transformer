@@ -67,10 +67,9 @@ export function Transformer() {
 
     const tsToOapi = trpc.useMutation("tsToOapi", {
         onSuccess: (result, { value }) => {
+            localCache.set(`tsToOapi-${hashCode(value)}`, result);
             if (editorsRef.current.openApi && editorsRef.current.openApi.getValue() !== result) {
-                editorsRef.current.openApi.setValue(result);
-                localCache.set(`tsToOapi-${hashCode(value)}`, result);
-                return;
+                return editorsRef.current.openApi.setValue(result);
             }
 
             texts.openApi = result;
@@ -82,10 +81,9 @@ export function Transformer() {
     });
     const tsToJsonSchema = trpc.useMutation("tsToJsonSchema", {
         onSuccess: (result, value) => {
+            localCache.set(`tsToJsonSchema-${hashCode(value)}`, result);
             if (editorsRef.current.jsonSchema && editorsRef.current.jsonSchema.getValue() !== result) {
-                editorsRef.current.jsonSchema.setValue(result);
-                localCache.set(`tsToJsonSchema-${hashCode(value)}`, result);
-                return;
+                return editorsRef.current.jsonSchema.setValue(result);
             }
 
             texts.jsonSchema = result;
@@ -97,10 +95,9 @@ export function Transformer() {
     });
     const tsToZod = trpc.useMutation("tsToZod", {
         onSuccess: (result, value) => {
+            localCache.set(`tsToZod-${hashCode(value)}`, result);
             if (editorsRef.current.zod && editorsRef.current.zod.getValue() !== result) {
-                editorsRef.current.zod.setValue(result);
-                localCache.set(`tsToZod-${hashCode(value)}`, result);
-                return;
+                return editorsRef.current.zod.setValue(result);
             }
 
             texts.zod = result;
@@ -120,19 +117,21 @@ export function Transformer() {
     useEffect(() => {
         callbackRef.current = debounce((value: string) => {
             if (!value) {
+                clearTexts();
                 return console.warn("no value");
             }
 
             const hasChanged = value !== prev.current.ts;
             const hasDestinationsChanged = destinations.join() !== prevDestinations?.join();
-            if (!hasChanged && !hasDestinationsChanged) {
+            if (value !== null && prev.current.ts !== "" && !hasChanged && !hasDestinationsChanged) {
                 return console.warn("no change", { prev: prev.current.ts, value, destinations, prevDestinations });
             }
             prev.current.ts = value;
 
             const snap = snapshot(texts);
             if (destinations.includes("openApi")) {
-                if (!localCache.has(`tsToOapi-${hashCode(value)}`)) {
+                const cacheKey = `tsToOapi-${hashCode(value)}`;
+                if (!localCache.has(cacheKey)) {
                     tsToOapi.mutate({
                         value,
                         format: openApiOptions.current.format as "json" | "yaml",
@@ -140,22 +139,33 @@ export function Transformer() {
                     });
                     prev.current.openApi = snap.openApi;
                 } else {
+                    const result = localCache.get(cacheKey);
+                    editorsRef.current.openApi!.setValue(result);
+                    texts.openApi = result;
                     console.warn("openApi didnt change, skipping");
                 }
             }
             if (destinations.includes("jsonSchema")) {
-                if (!localCache.has(`tsToJsonSchema-${hashCode(value)}`)) {
+                const cacheKey = `tsToJsonSchema-${hashCode(value)}`;
+                if (!localCache.has(cacheKey)) {
                     tsToJsonSchema.mutate(value);
                     prev.current.jsonSchema = snap.jsonSchema;
                 } else {
+                    const result = localCache.get(cacheKey);
+                    editorsRef.current.jsonSchema!.setValue(result);
+                    texts.jsonSchema = result;
                     console.warn("jsonSchema didnt change, skipping");
                 }
             }
             if (destinations.includes("zod")) {
-                if (!localCache.has(`tsToZod-${hashCode(value)}`)) {
+                const cacheKey = `tsToZod-${hashCode(value)}`;
+                if (!localCache.has(cacheKey)) {
                     tsToZod.mutate(value);
                     prev.current.zod = snap.zod;
                 } else {
+                    const result = localCache.get(cacheKey);
+                    editorsRef.current.zod!.setValue(result);
+                    texts.zod = result;
                     console.warn("zod didnt change, skipping");
                 }
             }
