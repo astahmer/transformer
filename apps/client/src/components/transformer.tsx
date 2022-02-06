@@ -6,6 +6,10 @@ import {
     CheckboxGroup,
     Divider,
     Heading,
+    IconButton,
+    Radio,
+    RadioGroup,
+    Select,
     SimpleGrid,
     Stack,
     Text,
@@ -20,9 +24,29 @@ import { snapshot } from "valtio/vanilla";
 import { debounce } from "./debounce";
 import { Show } from "./Show";
 import { tsDefaultValue } from "./tsDefaultValue";
+import { CloseIcon, EditIcon } from "@chakra-ui/icons";
+import type { OpenAPIWriterOptions } from "@transformer/backend/src";
 
 const texts = proxy({ ts: tsDefaultValue, jsonSchema: "", openApi: "", zod: "" });
-const prevDefault = { ts: null as string, jsonSchema: null as string, openApi: null as string, zod: null as string };
+const prevDefault = {
+    ts: null as unknown as string,
+    jsonSchema: null as unknown as string,
+    openApi: null as unknown as string,
+    zod: null as unknown as string,
+};
+const openApiSchemaVersions = [
+    "3.0.3",
+    "3.0.2",
+    "3.0.1",
+    "3.0.0",
+    "3.0.0-rc2",
+    "3.0.0-rc1",
+    "3.0.0-rc0",
+    "2.0",
+    "1.2",
+    "1.1",
+    "1.0",
+] as Array<OpenAPIWriterOptions["schemaVersion"]>;
 
 type MaybeEditor = monaco.editor.IStandaloneCodeEditor | null;
 
@@ -34,7 +58,7 @@ export default function Transformer() {
         zod: null as MaybeEditor,
     });
 
-    const tsToOapi = trpc.useMutation(["tsToOapi"], {
+    const tsToOapi = trpc.useMutation("tsToOapi", {
         onSuccess: (result) => {
             if (editorsRef.current.openApi && editorsRef.current.openApi.getValue() !== result) {
                 editorsRef.current.openApi.setValue(result);
@@ -44,7 +68,7 @@ export default function Transformer() {
             texts.openApi = result;
         },
     });
-    const tsToJsonSchema = trpc.useMutation(["tsToJsonSchema"], {
+    const tsToJsonSchema = trpc.useMutation("tsToJsonSchema", {
         onSuccess: (result) => {
             if (editorsRef.current.jsonSchema && editorsRef.current.jsonSchema.getValue() !== result) {
                 editorsRef.current.jsonSchema.setValue(result);
@@ -54,7 +78,7 @@ export default function Transformer() {
             texts.jsonSchema = result;
         },
     });
-    const tsToZod = trpc.useMutation(["tsToZod"], {
+    const tsToZod = trpc.useMutation("tsToZod", {
         onSuccess: (result) => {
             if (editorsRef.current.zod && editorsRef.current.zod.getValue() !== result) {
                 editorsRef.current.zod.setValue(result);
@@ -66,7 +90,7 @@ export default function Transformer() {
     });
 
     const [destinations, setDestinations] = useState<string[]>(["jsonSchema", "zod"]);
-    const callbackRef = useRef(null);
+    const callbackRef = useRef(null as unknown as (value: string) => void);
     const prev = useRef(prevDefault);
     const prevDestinations = usePrevious(destinations);
 
@@ -83,7 +107,11 @@ export default function Transformer() {
             const snap = snapshot(texts);
             if (destinations.includes("openApi")) {
                 if (prev.current.openApi !== snap.openApi) {
-                    tsToOapi.mutate(value);
+                    tsToOapi.mutate({
+                        value,
+                        format: openApiOptions.current.format as "json" | "yaml",
+                        schemaVersion: openApiOptions.current.schemaVersion,
+                    });
                 }
                 prev.current.openApi = snap.openApi;
             }
@@ -126,6 +154,12 @@ export default function Transformer() {
         editorsRef.current.ts?.setValue(tsDefaultValue);
     };
 
+    const openApiOptions = useRef<Required<Pick<OpenAPIWriterOptions, "format" | "schemaVersion">>>({
+        format: "json",
+        schemaVersion: openApiSchemaVersions[0]!,
+    });
+    const [isEditingOpenApi, setIsEditingOpenApi] = useState(false);
+
     return (
         <Stack w="100%" h="100%" p="4">
             <Stack direction="row" justifyContent="space-between">
@@ -142,7 +176,7 @@ export default function Transformer() {
                     >
                         <Stack spacing={[1, 5]} direction={["column", "row"]}>
                             <Checkbox value="jsonSchema">JSON Schema</Checkbox>
-                            <Checkbox value="openApi">OpenAPI 3</Checkbox>
+                            <Checkbox value="openApi">OpenAPI</Checkbox>
                             <Checkbox value="zod">Zod</Checkbox>
                         </Stack>
                     </CheckboxGroup>
@@ -188,9 +222,54 @@ export default function Transformer() {
                 </Show>
                 <Show cond={destinations.includes("openApi")}>
                     <Stack w="100%">
-                        <Heading as="h2" fontSize={24}>
-                            OpenAPI 3
-                        </Heading>
+                        <Stack>
+                            <Stack direction="row" alignContent="flex-end">
+                                <Heading as="h2" fontSize={24}>
+                                    OpenAPI
+                                </Heading>
+                                <Text fontSize="xs">
+                                    {openApiOptions.current.schemaVersion} ({openApiOptions.current.format})
+                                </Text>
+                                <IconButton
+                                    onClick={() =>
+                                        isEditingOpenApi ? setIsEditingOpenApi(false) : setIsEditingOpenApi(true)
+                                    }
+                                    size="sm"
+                                    icon={isEditingOpenApi ? <CloseIcon /> : <EditIcon />}
+                                    aria-label="Edit"
+                                />
+                            </Stack>
+                            <Show cond={isEditingOpenApi}>
+                                <Box px="4" py="2">
+                                    <RadioGroup
+                                        defaultValue={openApiOptions.current.format}
+                                        onChange={(v) =>
+                                            (openApiOptions.current.format = v as OpenAPIWriterOptions["format"])
+                                        }
+                                    >
+                                        <Stack direction="row">
+                                            <Radio value="json">JSON</Radio>
+                                            <Radio value="yaml">YAML</Radio>
+                                        </Stack>
+                                    </RadioGroup>
+                                    <Select
+                                        w="100%"
+                                        onChange={(e) =>
+                                            (openApiOptions.current.schemaVersion = e.target.value as Exclude<
+                                                OpenAPIWriterOptions["schemaVersion"],
+                                                undefined
+                                            >)
+                                        }
+                                    >
+                                        {openApiSchemaVersions.map((v) => (
+                                            <option key={v} value={v}>
+                                                {v}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </Box>
+                            </Show>
+                        </Stack>
                         <Divider />
                         <Editor
                             height="100%"
@@ -222,7 +301,6 @@ export default function Transformer() {
                         />
                     </Stack>
                 </Show>
-                {/* </Flex> */}
             </SimpleGrid>
         </Stack>
     );
