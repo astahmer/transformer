@@ -153,8 +153,7 @@ export default function Transformer() {
                     </Text>
                 </div>
             </Stack>
-            {/* <Flex w="100%" h="100%" p="2"> */}
-            <SimpleGrid columns={destinations.length + 1} h="100%" p="2">
+            <SimpleGrid columns={[1, 2, null, destinations.length + 1]} h="100%" p="2">
                 <Stack w="100%">
                     <Heading as="h2" fontSize={24}>
                         Typescript
