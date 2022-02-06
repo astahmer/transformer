@@ -1,4 +1,6 @@
+import { toasts } from "@/toasts";
 import { trpc } from "@/trpc";
+import { CloseIcon, EditIcon, InfoIcon } from "@chakra-ui/icons";
 import {
     Box,
     Button,
@@ -13,10 +15,11 @@ import {
     SimpleGrid,
     Stack,
     Text,
-    toast,
+    Tooltip,
     usePrevious,
 } from "@chakra-ui/react";
 import Editor from "@monaco-editor/react";
+import type { OpenAPIWriterOptions } from "@transformer/backend/src";
 import type * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useEffect, useRef, useState } from "react";
 import { proxy } from "valtio";
@@ -25,10 +28,6 @@ import { snapshot } from "valtio/vanilla";
 import { debounce } from "./debounce";
 import { Show } from "./Show";
 import { tsDefaultValue } from "./tsDefaultValue";
-import { CloseIcon, EditIcon, InfoIcon } from "@chakra-ui/icons";
-import type { OpenAPIWriterOptions } from "@transformer/backend/src";
-import { toasts } from "@/toasts";
-import { Tooltip } from "@chakra-ui/react";
 
 const localCache = new Map();
 const texts = proxy({ ts: tsDefaultValue, jsonSchema: "", openApi: "", zod: "" });
@@ -78,7 +77,7 @@ export function Transformer() {
         },
         onError: (err) => {
             console.error(err);
-            toasts.error(err.message);
+            toasts.error("openApi: " + err.message);
         },
     });
     const tsToJsonSchema = trpc.useMutation("tsToJsonSchema", {
@@ -93,7 +92,7 @@ export function Transformer() {
         },
         onError: (err) => {
             console.error(err);
-            toasts.error(err.message);
+            toasts.error("jsonSchema: " + err.message);
         },
     });
     const tsToZod = trpc.useMutation("tsToZod", {
@@ -108,7 +107,7 @@ export function Transformer() {
         },
         onError: (err) => {
             console.error(err);
-            toasts.error(err.message);
+            toasts.error("zod: " + err.message);
         },
     });
 
