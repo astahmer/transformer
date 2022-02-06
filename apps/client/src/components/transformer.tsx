@@ -218,7 +218,7 @@ export function Transformer() {
                         <InfoIcon color="red.300" />
                     </Tooltip>
                     <Text fontWeight="bold" color="red.700">
-                        Please do NOT use TS Generics
+                        Please do NOT use complex TS Generics
                     </Text>
                 </Stack>
             </Stack>
