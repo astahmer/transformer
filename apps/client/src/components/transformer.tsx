@@ -1,5 +1,16 @@
 import { trpc } from "@/trpc";
-import { Checkbox, CheckboxGroup, Divider, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
+import {
+    Box,
+    Button,
+    Checkbox,
+    CheckboxGroup,
+    Divider,
+    Heading,
+    SimpleGrid,
+    Stack,
+    Text,
+    usePrevious,
+} from "@chakra-ui/react";
 import Editor from "@monaco-editor/react";
 import type * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +22,7 @@ import { Show } from "./Show";
 import { tsDefaultValue } from "./tsDefaultValue";
 
 const texts = proxy({ ts: tsDefaultValue, jsonSchema: "", openApi: "", zod: "" });
+const prevDefault = { ts: null as string, jsonSchema: null as string, openApi: null as string, zod: null as string };
 
 type MaybeEditor = monaco.editor.IStandaloneCodeEditor | null;
 
@@ -55,34 +67,37 @@ export default function Transformer() {
 
     const [destinations, setDestinations] = useState<string[]>(["jsonSchema", "zod"]);
     const callbackRef = useRef(null);
-    const prev = useRef({ ts: null, jsonSchema: null, openApi: null, zod: null });
+    const prev = useRef(prevDefault);
+    const prevDestinations = usePrevious(destinations);
 
     // update callbackRef when destinations change, also call API
     useEffect(() => {
         callbackRef.current = debounce((value: string) => {
             if (!value) return;
-            if (value === prev.current.ts) return;
+
+            const hasChanged = value !== prev.current.ts;
+            const hasDestinationsChanged = destinations.join() !== prevDestinations?.join();
+            if (!hasChanged && !hasDestinationsChanged) return;
             prev.current.ts = value;
 
             const snap = snapshot(texts);
-            console.log(snap);
             if (destinations.includes("openApi")) {
                 if (prev.current.openApi !== snap.openApi) {
                     tsToOapi.mutate(value);
                 }
-                prev.current.openApi = value;
+                prev.current.openApi = snap.openApi;
             }
             if (destinations.includes("jsonSchema")) {
                 if (prev.current.jsonSchema !== snap.jsonSchema) {
                     tsToJsonSchema.mutate(value);
                 }
-                prev.current.jsonSchema = value;
+                prev.current.jsonSchema = snap.jsonSchema;
             }
             if (destinations.includes("zod")) {
                 if (prev.current.zod !== snap.zod) {
                     tsToZod.mutate(value);
                 }
-                prev.current.zod = value;
+                prev.current.zod = snap.zod;
             }
         }, 300);
 
@@ -97,10 +112,29 @@ export default function Transformer() {
         };
     }, []);
 
+    const clearTexts = () => {
+        // texts.ts = texts.jsonSchema = texts.openApi = texts.zod = "";
+        prev.current = prevDefault;
+        editorsRef.current.ts?.setValue("");
+        editorsRef.current.jsonSchema?.setValue("");
+        editorsRef.current.openApi?.setValue("");
+        editorsRef.current.zod?.setValue("");
+    };
+    const resetToDefault = () => {
+        texts.ts = tsDefaultValue;
+        prev.current = prevDefault;
+        editorsRef.current.ts?.setValue(tsDefaultValue);
+    };
+
     return (
         <Stack w="100%" h="100%" p="4">
             <Stack direction="row" justifyContent="space-between">
-                <div>
+                <Stack direction="row" spacing="8">
+                    <Stack direction="row">
+                        <Button onClick={() => clearTexts()}>Clear</Button>
+                        <Button onClick={() => resetToDefault()}>Reset to default</Button>
+                    </Stack>
+                    <Divider orientation="vertical" />
                     <CheckboxGroup
                         colorScheme="green"
                         defaultValue={destinations}
@@ -112,7 +146,7 @@ export default function Transformer() {
                             <Checkbox value="zod">Zod</Checkbox>
                         </Stack>
                     </CheckboxGroup>
-                </div>
+                </Stack>
                 <div>
                     <Text fontWeight="bold" color="red">
                         Please do NOT use TS Generics
@@ -144,9 +178,11 @@ export default function Transformer() {
                         <Editor
                             height="100%"
                             defaultLanguage="json"
-                            defaultValue={texts.jsonSchema}
                             options={{ minimap: { enabled: false }, readOnly: true }}
-                            onMount={(ref) => (editorsRef.current.jsonSchema = ref!)}
+                            onMount={(ref) => {
+                                editorsRef.current.jsonSchema = ref!;
+                                ref.setValue(texts.jsonSchema);
+                            }}
                             onChange={(value) => (texts.jsonSchema = value!)}
                         />
                     </Stack>
@@ -160,9 +196,11 @@ export default function Transformer() {
                         <Editor
                             height="100%"
                             defaultLanguage="json"
-                            defaultValue={texts.openApi}
                             options={{ minimap: { enabled: false }, readOnly: true }}
-                            onMount={(ref) => (editorsRef.current.openApi = ref!)}
+                            onMount={(ref) => {
+                                editorsRef.current.openApi = ref!;
+                                ref.setValue(texts.openApi);
+                            }}
                             onChange={(value) => (texts.openApi = value!)}
                         />
                     </Stack>
@@ -176,9 +214,11 @@ export default function Transformer() {
                         <Editor
                             height="100%"
                             defaultLanguage="typescript"
-                            defaultValue={texts.zod}
                             options={{ minimap: { enabled: false }, readOnly: true }}
-                            onMount={(ref) => (editorsRef.current.zod = ref!)}
+                            onMount={(ref) => {
+                                editorsRef.current.zod = ref!;
+                                ref.setValue(texts.zod);
+                            }}
                             onChange={(value) => (texts.zod = value!)}
                         />
                     </Stack>
