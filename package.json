@@ -22,10 +22,7 @@
     "importSort": {
         ".js, jsx, .ts, .tsx": {
             "options": {
-                "ignoreTsConfig": true,
-                "extraAliases": [
-                    "@pastable/*"
-                ]
+                "ignoreTsConfig": true
             }
         }
     }
