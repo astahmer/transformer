@@ -1,7 +1,7 @@
-import { createHTTPServer, createHTTPHandler } from "@trpc/server/adapters/standalone";
+import { createHTTPHandler } from "@trpc/server/adapters/standalone";
+import http from "http";
 import { createContext } from "./createContext";
 import { appRouter } from "./router";
-import http from "http";
 
 console.log("starting backend");
 const handler = createHTTPHandler({ router: appRouter, createContext });

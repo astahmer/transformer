@@ -1,9 +1,8 @@
+import { InterfaceDeclaration, Project, TypeAliasDeclaration } from "ts-morph";
+import { generate } from "ts-to-zod";
+import { getJsonSchemaWriter, getOpenApiWriter, getTypeScriptReader, makeConverter } from "typeconv";
 import { z } from "zod";
 import { createRouter } from "./createRouter";
-
-import { getTypeScriptReader, getOpenApiWriter, getJsonSchemaWriter, makeConverter } from "typeconv";
-import { generate } from "ts-to-zod";
-import { InterfaceDeclaration, Project, TypeAliasDeclaration } from "ts-morph";
 
 const reader = getTypeScriptReader();
 

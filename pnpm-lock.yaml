@@ -16,12 +16,10 @@ importers:
 
   apps/backend:
     specifiers:
-      '@prisma/client': ^3.9.1
       '@trpc/server': ^9.18.0
       '@types/node': ^17.0.15
       esno: ^0.14.0
       nodemon: ^2.0.15
-      prisma: ^3.9.1
       rimraf: ^3.0.2
       ts-morph: ^13.0.3
       ts-to-zod: ^1.8.0
@@ -29,7 +27,6 @@ importers:
       typeconv: ^1.7.0
       zod: ^3.11.6
     dependencies:
-      '@prisma/client': 3.9.1_prisma@3.9.1
       '@trpc/server': 9.18.0
       ts-morph: 13.0.3
       ts-to-zod: 1.8.0
@@ -39,7 +36,6 @@ importers:
       '@types/node': 17.0.15
       esno: 0.14.0
       nodemon: 2.0.15
-      prisma: 3.9.1
       rimraf: 3.0.2
       tsconfig-paths: 3.12.0
 
@@ -2453,29 +2449,6 @@ packages:
   /@popperjs/core/2.11.2:
     resolution: {integrity: sha512-92FRmppjjqz29VMJ2dn+xdyXZBrMlE42AV6Kq6BwjWV7CNUW1hs2FtxSNLQE+gJhaZ6AAmYuO9y8dshhcBl7vA==}
     dev: false
-
-  /@prisma/client/3.9.1_prisma@3.9.1:
-    resolution: {integrity: sha512-aLwfXKLvL+loQ0IuPPCXkcq8cXBg1IeoHHa5lqQu3dJHdj45wnislA/Ny4UxRQjD5FXqrfAb8sWtF+jhdmjFTg==}
-    engines: {node: '>=12.6'}
-    requiresBuild: true
-    peerDependencies:
-      prisma: '*'
-    peerDependenciesMeta:
-      prisma:
-        optional: true
-    dependencies:
-      '@prisma/engines-version': 3.9.0-58.bcc2ff906db47790ee902e7bbc76d7ffb1893009
-      prisma: 3.9.1
-    dev: false
-
-  /@prisma/engines-version/3.9.0-58.bcc2ff906db47790ee902e7bbc76d7ffb1893009:
-    resolution: {integrity: sha512-5Dh+qTDhpPR66w6NNAnPs+/W/Qt4r1DSd+qhfPFcDThUK4uxoZKGlPb2IYQn5LL+18aIGnmteDf7BnVMmvBNSQ==}
-    dev: false
-
-  /@prisma/engines/3.9.0-58.bcc2ff906db47790ee902e7bbc76d7ffb1893009:
-    resolution: {integrity: sha512-qM+uJbkelB21bnK44gYE049YTHIjHysOuj0mj5U2gDGyNLfmiazlggzFPCgEjgme4U5YB2tYs6Z5Hq08Kl8pjA==}
-    requiresBuild: true
-    dev: true
 
   /@reach/alert/0.13.2_react-dom@17.0.2+react@17.0.2:
     resolution: {integrity: sha512-LDz83AXCrClyq/MWe+0vaZfHp1Ytqn+kgL5VxG7rirUvmluWaj/snxzfNPWn0Ma4K2YENmXXRC/iHt5X95SqIg==}
@@ -5213,15 +5186,6 @@ packages:
   /pretty-bytes/5.6.0:
     resolution: {integrity: sha512-FFw039TmrBqFK8ma/7OL3sDz/VytdtJr044/QUJtH0wK9lb9jLq9tJyIxUwtQJHwar2BqtiA4iCWSwo9JLkzFg==}
     engines: {node: '>=6'}
-    dev: true
-
-  /prisma/3.9.1:
-    resolution: {integrity: sha512-IGcJAu5LzlFv+i+NNhOEh1J1xVVttsVdRBxmrMN7eIH+7mRN6L89Hz1npUAiz4jOpNlHC7n9QwaOYZGxTqlwQw==}
-    engines: {node: '>=12.6'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      '@prisma/engines': 3.9.0-58.bcc2ff906db47790ee902e7bbc76d7ffb1893009
     dev: true
 
   /prop-types/15.8.1:

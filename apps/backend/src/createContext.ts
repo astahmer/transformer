@@ -1,13 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import * as trpc from "@trpc/server";
 import * as trpcNext from "@trpc/server/adapters/next";
-
-// const prisma = new PrismaClient({
-//   log:
-//     process.env.NODE_ENV === "development"
-//       ? ["query", "error", "warn"]
-//       : ["error"],
-// });
 
 /**
  * Creates context for an incoming request
@@ -18,7 +10,6 @@ export const createContext = async ({ req, res }: trpcNext.CreateNextContextOpti
     return {
         req,
         res,
-        // prisma,
     };
 };
 
