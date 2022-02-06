@@ -1,0 +1,26 @@
+{
+    "name": "@transformer/backend",
+    "version": "0.0.0",
+    "scripts": {
+        "dev-start": "esno -r tsconfig-paths/register ./src/main.ts",
+        "dev": "nodemon",
+        "prebuild": "rimraf dist && rimraf temp",
+        "build": "pnpm prebuild && tsc",
+        "start": "NODE_ENV=production node dist/main.js"
+    },
+    "devDependencies": {
+        "@types/node": "^17.0.15",
+        "esno": "^0.14.0",
+        "nodemon": "^2.0.15",
+        "prisma": "^3.9.1",
+        "rimraf": "^3.0.2",
+        "tsconfig-paths": "^3.12.0"
+    },
+    "dependencies": {
+        "@prisma/client": "^3.9.1",
+        "@trpc/server": "^9.18.0",
+        "ts-to-zod": "^1.8.0",
+        "typeconv": "^1.7.0",
+        "zod": "^3.11.6"
+    }
+}

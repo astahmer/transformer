@@ -1,0 +1,57 @@
+{
+    "name": "@transformer/client",
+    "version": "0.0.0",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "serve": "vite preview"
+    },
+    "dependencies": {
+        "@babel/core": "^7.17.0",
+        "@chakra-ui/react": "^1.8.1",
+        "@emotion/react": "^11.7.1",
+        "@emotion/styled": "^11.6.0",
+        "@monaco-editor/react": "^4.3.1",
+        "@pastable/core": "^0.1.19",
+        "@trpc/client": "^9.18.0",
+        "@trpc/react": "^9.18.0",
+        "@xstate/react": "^2.0.0",
+        "axios": "^0.25.0",
+        "framer-motion": "^6.2.3",
+        "jotai": "^1.5.3",
+        "monaco-editor": "^0.32.0",
+        "pino-pretty": "^7.5.1",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "react-hook-form": "^7.25.3",
+        "react-icons": "^4.3.1",
+        "react-query": "^3.34.12",
+        "react-router-dom": "^6.2.1",
+        "valtio": "^1.2.11",
+        "xstate": "^4.29.0"
+    },
+    "devDependencies": {
+        "@types/react": "^17.0.39",
+        "@types/react-dom": "^17.0.11",
+        "@vitejs/plugin-react": "^1.1.4",
+        "@transformer/backend": "workspace:^0.0.0",
+        "prettier": "^2.5.1",
+        "prettier-plugin-sorted": "^2.0.0",
+        "typescript": "^4.5.5",
+        "vite": "^2.7.13",
+        "vite-plugin-pwa": "^0.11.13"
+    },
+    "importSort": {
+        ".js, jsx, .ts, .tsx": {
+            "options": {
+                "ignoreTsConfig": true,
+                "extraAliases": [
+                    "@/*"
+                ],
+                "bottomAliases": [
+                    "/assets"
+                ]
+            }
+        }
+    }
+}
