@@ -3,11 +3,22 @@ import { createRouter } from "./createRouter";
 
 import { getTypeScriptReader, getOpenApiWriter, getJsonSchemaWriter, makeConverter } from "typeconv";
 import { generate } from "ts-to-zod";
+import { Project } from "ts-morph";
 
 const reader = getTypeScriptReader();
 
 const jsonSchemaWriter = getJsonSchemaWriter();
 const tsToJsonSchema = makeConverter(reader, jsonSchemaWriter);
+const project = new Project({
+    useInMemoryFileSystem: true,
+    skipLoadingLibFiles: true,
+    compilerOptions: {
+        skipLibCheck: true,
+        noLib: true,
+        skipDefaultLibCheck: true,
+        noResolve: true,
+    },
+});
 
 // OpenAPIWriterOptions["schemaVersion"]
 const openApiSchemaVersionSchema = z.union([
@@ -24,15 +35,17 @@ const openApiSchemaVersionSchema = z.union([
     z.literal("1.0"),
 ]);
 
-// TODO - strip generics before using source to convert ? https://ts-morph.com/details/type-parameters
+// TODO add export on interfaces/types
 
 export const appRouter = createRouter()
     .mutation("tsToZod", {
         input: z.string(),
         async resolve({ input }) {
-            const result = generate({ sourceText: input });
-            const oui = result.getZodSchemasFile("./schema");
-            return oui;
+            const ts = stripOutGenerics(input);
+            const result = generate({ sourceText: ts });
+
+            const zodResult = result.getZodSchemasFile("./schema");
+            return zodResult;
         },
     })
     .mutation("tsToOapi", {
@@ -49,16 +62,32 @@ export const appRouter = createRouter()
                 schemaVersion: input.schemaVersion,
             });
             const tsToOapi = makeConverter(reader, oapiWriter);
-            const result = await tsToOapi.convert({ data: input.value });
+
+            const ts = stripOutGenerics(input.value);
+            const result = await tsToOapi.convert({ data: ts });
             return result.data;
         },
     })
     .mutation("tsToJsonSchema", {
         input: z.string(),
         async resolve({ input }) {
-            const result = await tsToJsonSchema.convert({ data: input });
+            const ts = stripOutGenerics(input);
+            const result = await tsToJsonSchema.convert({ data: ts });
             return result.data;
         },
     });
 
 export type AppRouter = typeof appRouter;
+
+function stripOutGenerics(input: string) {
+    const tsFile = project.createSourceFile("source.ts", input);
+
+    const nodes = tsFile.getInterfaces();
+    nodes.forEach((n) => n.getTypeParameters().forEach((t) => t.remove()));
+
+    tsFile.saveSync();
+    const ts = tsFile.getText();
+    tsFile.deleteImmediatelySync();
+
+    return ts;
+}

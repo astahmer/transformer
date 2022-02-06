@@ -19,6 +19,7 @@
     "dependencies": {
         "@prisma/client": "^3.9.1",
         "@trpc/server": "^9.18.0",
+        "ts-morph": "^13.0.3",
         "ts-to-zod": "^1.8.0",
         "typeconv": "^1.7.0",
         "zod": "^3.11.6"

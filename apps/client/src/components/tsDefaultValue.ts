@@ -33,8 +33,8 @@ export const tsDefaultValue = `type Sort = {
     creation_date: Date;
   }
 
-  export interface ApiResponse {
-    content: object;
+  export interface ApiResponse<Content> {
+    content: Content;
     pageable: Pageable;
     sort: Sort;
     obj: { first: string, second: Sort };

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 
 import { Demo } from "./components/Demo";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Transformer from "./components/transformer";
+import { Transformer } from "./components/transformer";
 import { trpc } from "./trpc";
 
 const queryClient = new QueryClient();

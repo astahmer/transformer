@@ -1,2 +1,3 @@
+import type { CompilerOptions } from "ts-morph";
 import type { OpenAPIWriterOptions } from "typeconv";
-export { OpenAPIWriterOptions };
+export { CompilerOptions, OpenAPIWriterOptions };

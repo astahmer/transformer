@@ -13,6 +13,7 @@ import {
     SimpleGrid,
     Stack,
     Text,
+    toast,
     usePrevious,
 } from "@chakra-ui/react";
 import Editor from "@monaco-editor/react";
@@ -24,9 +25,12 @@ import { snapshot } from "valtio/vanilla";
 import { debounce } from "./debounce";
 import { Show } from "./Show";
 import { tsDefaultValue } from "./tsDefaultValue";
-import { CloseIcon, EditIcon } from "@chakra-ui/icons";
+import { CloseIcon, EditIcon, InfoIcon } from "@chakra-ui/icons";
 import type { OpenAPIWriterOptions } from "@transformer/backend/src";
+import { toasts } from "@/toasts";
+import { Tooltip } from "@chakra-ui/react";
 
+const localCache = new Map();
 const texts = proxy({ ts: tsDefaultValue, jsonSchema: "", openApi: "", zod: "" });
 const prevDefault = {
     ts: null as unknown as string,
@@ -50,42 +54,61 @@ const openApiSchemaVersions = [
 
 type MaybeEditor = monaco.editor.IStandaloneCodeEditor | null;
 
-export default function Transformer() {
+// TODO refresh indicator for backend refresh
+
+export function Transformer() {
     const editorsRef = useRef({
         ts: null as MaybeEditor,
         jsonSchema: null as MaybeEditor,
         openApi: null as MaybeEditor,
         zod: null as MaybeEditor,
     });
+    const monacoRef = useRef(null as typeof monaco | null);
+    const tsText = useRef<string>(texts.ts);
 
     const tsToOapi = trpc.useMutation("tsToOapi", {
-        onSuccess: (result) => {
+        onSuccess: (result, { value }) => {
             if (editorsRef.current.openApi && editorsRef.current.openApi.getValue() !== result) {
                 editorsRef.current.openApi.setValue(result);
+                localCache.set(`tsToOapi-${hashCode(value)}`, result);
                 return;
             }
 
             texts.openApi = result;
         },
+        onError: (err) => {
+            console.error(err);
+            toasts.error(err.message);
+        },
     });
     const tsToJsonSchema = trpc.useMutation("tsToJsonSchema", {
-        onSuccess: (result) => {
+        onSuccess: (result, value) => {
             if (editorsRef.current.jsonSchema && editorsRef.current.jsonSchema.getValue() !== result) {
                 editorsRef.current.jsonSchema.setValue(result);
+                localCache.set(`tsToJsonSchema-${hashCode(value)}`, result);
                 return;
             }
 
             texts.jsonSchema = result;
         },
+        onError: (err) => {
+            console.error(err);
+            toasts.error(err.message);
+        },
     });
     const tsToZod = trpc.useMutation("tsToZod", {
-        onSuccess: (result) => {
+        onSuccess: (result, value) => {
             if (editorsRef.current.zod && editorsRef.current.zod.getValue() !== result) {
                 editorsRef.current.zod.setValue(result);
+                localCache.set(`tsToZod-${hashCode(value)}`, result);
                 return;
             }
 
             texts.zod = result;
+        },
+        onError: (err) => {
+            console.error(err);
+            toasts.error(err.message);
         },
     });
 
@@ -97,35 +120,45 @@ export default function Transformer() {
     // update callbackRef when destinations change, also call API
     useEffect(() => {
         callbackRef.current = debounce((value: string) => {
-            if (!value) return;
+            if (!value) {
+                return console.warn("no value");
+            }
 
             const hasChanged = value !== prev.current.ts;
             const hasDestinationsChanged = destinations.join() !== prevDestinations?.join();
-            if (!hasChanged && !hasDestinationsChanged) return;
+            if (!hasChanged && !hasDestinationsChanged) {
+                return console.warn("no change", { prev: prev.current.ts, value, destinations, prevDestinations });
+            }
             prev.current.ts = value;
 
             const snap = snapshot(texts);
             if (destinations.includes("openApi")) {
-                if (prev.current.openApi !== snap.openApi) {
+                if (!localCache.has(`tsToOapi-${hashCode(value)}`)) {
                     tsToOapi.mutate({
                         value,
                         format: openApiOptions.current.format as "json" | "yaml",
                         schemaVersion: openApiOptions.current.schemaVersion,
                     });
+                    prev.current.openApi = snap.openApi;
+                } else {
+                    console.warn("openApi didnt change, skipping");
                 }
-                prev.current.openApi = snap.openApi;
             }
             if (destinations.includes("jsonSchema")) {
-                if (prev.current.jsonSchema !== snap.jsonSchema) {
+                if (!localCache.has(`tsToJsonSchema-${hashCode(value)}`)) {
                     tsToJsonSchema.mutate(value);
+                    prev.current.jsonSchema = snap.jsonSchema;
+                } else {
+                    console.warn("jsonSchema didnt change, skipping");
                 }
-                prev.current.jsonSchema = snap.jsonSchema;
             }
             if (destinations.includes("zod")) {
-                if (prev.current.zod !== snap.zod) {
+                if (!localCache.has(`tsToZod-${hashCode(value)}`)) {
                     tsToZod.mutate(value);
+                    prev.current.zod = snap.zod;
+                } else {
+                    console.warn("zod didnt change, skipping");
                 }
-                prev.current.zod = snap.zod;
             }
         }, 300);
 
@@ -135,13 +168,13 @@ export default function Transformer() {
     // call API on ts change
     useEffect(() => {
         const unsubTs = subscribeKey(texts, "ts", (value) => callbackRef.current(value));
+
         return () => {
             unsubTs();
         };
     }, []);
 
     const clearTexts = () => {
-        // texts.ts = texts.jsonSchema = texts.openApi = texts.zod = "";
         prev.current = prevDefault;
         editorsRef.current.ts?.setValue("");
         editorsRef.current.jsonSchema?.setValue("");
@@ -181,11 +214,14 @@ export default function Transformer() {
                         </Stack>
                     </CheckboxGroup>
                 </Stack>
-                <div>
-                    <Text fontWeight="bold" color="red">
+                <Stack direction="row" alignItems="center">
+                    <Tooltip label="They will be stripped out and shouldn't be expected to work well">
+                        <InfoIcon color="red.300" />
+                    </Tooltip>
+                    <Text fontWeight="bold" color="red.700">
                         Please do NOT use TS Generics
                     </Text>
-                </div>
+                </Stack>
             </Stack>
             <SimpleGrid columns={[1, 2, null, destinations.length + 1]} h="100%" p="2">
                 <Stack w="100%">
@@ -198,8 +234,27 @@ export default function Transformer() {
                         defaultLanguage="typescript"
                         defaultValue={texts.ts}
                         options={{ minimap: { enabled: false } }}
-                        onMount={(ref) => (editorsRef.current.ts = ref!)}
-                        onChange={(value) => (texts.ts = value!)}
+                        onMount={(ref, monaco) => {
+                            editorsRef.current.ts = ref!;
+                            monacoRef.current = monaco!;
+                        }}
+                        onChange={(value) => {
+                            tsText.current = value!;
+
+                            const model = editorsRef.current.ts!.getModel();
+                            if (model) {
+                                const markers = monacoRef.current!.editor.getModelMarkers({ resource: model.uri });
+                                if (!markers.length) {
+                                    texts.ts = tsText.current;
+                                }
+                            }
+                        }}
+                        onValidate={(markers) => {
+                            if (markers.length) {
+                                return console.warn("TS Errors", markers);
+                            }
+                            texts.ts = tsText.current;
+                        }}
                     />
                 </Stack>
                 <Show cond={destinations.includes("jsonSchema")}>
@@ -216,7 +271,6 @@ export default function Transformer() {
                                 editorsRef.current.jsonSchema = ref!;
                                 ref.setValue(texts.jsonSchema);
                             }}
-                            onChange={(value) => (texts.jsonSchema = value!)}
                         />
                     </Stack>
                 </Show>
@@ -279,7 +333,6 @@ export default function Transformer() {
                                 editorsRef.current.openApi = ref!;
                                 ref.setValue(texts.openApi);
                             }}
-                            onChange={(value) => (texts.openApi = value!)}
                         />
                     </Stack>
                 </Show>
@@ -297,11 +350,19 @@ export default function Transformer() {
                                 editorsRef.current.zod = ref!;
                                 ref.setValue(texts.zod);
                             }}
-                            onChange={(value) => (texts.zod = value!)}
                         />
                     </Stack>
                 </Show>
             </SimpleGrid>
         </Stack>
     );
+}
+
+// https://gist.github.com/hyamamoto/fd435505d29ebfa3d9716fd2be8d42f0
+function hashCode(s: string) {
+    let h = 0;
+    let i = 0;
+    for (i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+
+    return h;
 }
