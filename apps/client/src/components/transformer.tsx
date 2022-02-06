@@ -13,6 +13,7 @@ import {
     RadioGroup,
     Select,
     SimpleGrid,
+    Spinner,
     Stack,
     Text,
     Tooltip,
@@ -268,9 +269,14 @@ export function Transformer() {
                 </Stack>
                 <Show cond={destinations.includes("jsonSchema")}>
                     <Stack w="100%">
-                        <Heading as="h2" fontSize={24}>
-                            JSON Schema
-                        </Heading>
+                        <Stack direction="row">
+                            <Heading as="h2" fontSize={24}>
+                                JSON Schema
+                            </Heading>
+                            <Show cond={tsToJsonSchema.isLoading}>
+                                <Spinner />
+                            </Show>
+                        </Stack>
                         <Divider />
                         <Editor
                             height="100%"
@@ -301,6 +307,9 @@ export function Transformer() {
                                     icon={isEditingOpenApi ? <CloseIcon /> : <EditIcon />}
                                     aria-label="Edit"
                                 />
+                                <Show cond={tsToOapi.isLoading}>
+                                    <Spinner />
+                                </Show>
                             </Stack>
                             <Show cond={isEditingOpenApi}>
                                 <Box px="4" py="2">
@@ -347,9 +356,14 @@ export function Transformer() {
                 </Show>
                 <Show cond={destinations.includes("zod")}>
                     <Stack w="100%">
-                        <Heading as="h2" fontSize={24}>
-                            Zod schemas
-                        </Heading>
+                        <Stack direction="row">
+                            <Heading as="h2" fontSize={24}>
+                                Zod schemas
+                            </Heading>
+                            <Show cond={tsToZod.isLoading}>
+                                <Spinner />
+                            </Show>
+                        </Stack>
                         <Divider />
                         <Editor
                             height="100%"
