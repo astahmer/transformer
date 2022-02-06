@@ -3,7 +3,7 @@ import { createRouter } from "./createRouter";
 
 import { getTypeScriptReader, getOpenApiWriter, getJsonSchemaWriter, makeConverter } from "typeconv";
 import { generate } from "ts-to-zod";
-import { Project } from "ts-morph";
+import { InterfaceDeclaration, Project, TypeAliasDeclaration } from "ts-morph";
 
 const reader = getTypeScriptReader();
 
@@ -35,13 +35,11 @@ const openApiSchemaVersionSchema = z.union([
     z.literal("1.0"),
 ]);
 
-// TODO add export on interfaces/types
-
 export const appRouter = createRouter()
     .mutation("tsToZod", {
         input: z.string(),
         async resolve({ input }) {
-            const ts = stripOutGenerics(input);
+            const ts = getTransformedTs(input);
             const result = generate({ sourceText: ts });
 
             const zodResult = result.getZodSchemasFile("./schema");
@@ -63,7 +61,7 @@ export const appRouter = createRouter()
             });
             const tsToOapi = makeConverter(reader, oapiWriter);
 
-            const ts = stripOutGenerics(input.value);
+            const ts = getTransformedTs(input.value);
             const result = await tsToOapi.convert({ data: ts });
             return result.data;
         },
@@ -71,7 +69,7 @@ export const appRouter = createRouter()
     .mutation("tsToJsonSchema", {
         input: z.string(),
         async resolve({ input }) {
-            const ts = stripOutGenerics(input);
+            const ts = getTransformedTs(input);
             const result = await tsToJsonSchema.convert({ data: ts });
             return result.data;
         },
@@ -79,11 +77,17 @@ export const appRouter = createRouter()
 
 export type AppRouter = typeof appRouter;
 
-function stripOutGenerics(input: string) {
+const autoTransformTs = (node: InterfaceDeclaration | TypeAliasDeclaration) => {
+    node.setIsExported(true);
+    node.getTypeParameters().forEach((t) => t.remove());
+};
+
+/** Strip out generics, auto-exports interfaces */
+function getTransformedTs(input: string) {
     const tsFile = project.createSourceFile("source.ts", input);
 
-    const nodes = tsFile.getInterfaces();
-    nodes.forEach((n) => n.getTypeParameters().forEach((t) => t.remove()));
+    tsFile.getTypeAliases().forEach(autoTransformTs);
+    tsFile.getInterfaces().forEach(autoTransformTs);
 
     tsFile.saveSync();
     const ts = tsFile.getText();
