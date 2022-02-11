@@ -9,7 +9,7 @@ import { Transformer } from "./components/transformer";
 import { trpc } from "./trpc";
 
 const queryClient = new QueryClient();
-const trpcClient = trpc.createClient({ url: "http://localhost:5000" });
+const trpcClient = trpc.createClient({ url: (import.meta.env.VITE_BACKEND_URL as string) || "http://localhost:5000" });
 
 const theme = extendTheme({ config: { initialColorMode: "light" } });
 

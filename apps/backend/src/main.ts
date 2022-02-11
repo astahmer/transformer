@@ -1,9 +1,12 @@
+import "dotenv/config";
+
 import { createHTTPHandler } from "@trpc/server/adapters/standalone";
 import http from "http";
 import { createContext } from "./createContext";
 import { appRouter } from "./router";
 
-console.log("starting backend");
+const port = process.env.PORT || 5000;
+console.log("starting backend on port", port);
 const handler = createHTTPHandler({ router: appRouter, createContext });
 
 const server = http.createServer((req, res) => {
@@ -20,5 +23,5 @@ const server = http.createServer((req, res) => {
     handler(req, res);
 });
 
-server.listen(5000);
-console.log("listening on 5000");
+server.listen(port);
+console.log("listening on", port);
