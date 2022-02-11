@@ -4,6 +4,9 @@
         "build": {
             "dependsOn": ["^build"]
         },
+        "client#build": {
+            "dependsOn": ["^build", "$VITE_BACKEND_URL"]
+        },
         "test": {
             "dependsOn": ["^build"],
             "outputs": []
