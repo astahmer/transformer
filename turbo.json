@@ -11,5 +11,6 @@
         "dev": {
             "cache": false
         }
-    }
+    },
+    "globalDependencies": ["$GITHUB_TOKEN", "tsconfig.json", ".env.*"]
 }
