@@ -3,9 +3,8 @@ import "./App.css";
 import { ChakraProvider, Flex, extendTheme } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 
-import { Demo } from "./components/Demo";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Transformer } from "./components/transformer";
+import { TransformerPage } from "./Transformer/TransformerPage";
 import { trpc } from "./trpc";
 
 const queryClient = new QueryClient();
@@ -21,8 +20,7 @@ function App() {
                     <Flex direction="column" boxSize="100%">
                         <BrowserRouter>
                             <Routes>
-                                <Route path="/demo" element={<Demo />} />
-                                <Route path="/" element={<Transformer />} />
+                                <Route path="/" element={<TransformerPage />} />
                             </Routes>
                         </BrowserRouter>
                     </Flex>
