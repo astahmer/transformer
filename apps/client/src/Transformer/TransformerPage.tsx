@@ -107,7 +107,11 @@ function Header() {
         <Stack direction="row" justifyContent="space-between">
             <Stack direction="row" spacing="8">
                 <Stack direction="row">
-                    <Select w="100px" onChange={(e) => (textsProxy.source = e.target.value as OutputDestination)}>
+                    <Select
+                        w="100px"
+                        onChange={(e) => (textsProxy.source = e.target.value as OutputDestination)}
+                        value={texts.source}
+                    >
                         {sourceOptions.map((v) => (
                             <option key={v} value={v}>
                                 {v}
