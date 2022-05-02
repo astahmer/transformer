@@ -1,20 +1,25 @@
 # Transformer 🪄
 
-![Capture d’écran 2022-02-06 à 19 14 31](https://user-images.githubusercontent.com/47224540/152695146-33b9f4fb-0e97-4ede-890c-615ba02fe7e0.png)
+![Screenshot 2022-05-03 at 00 46 40](https://user-images.githubusercontent.com/47224540/166338700-e1a749d8-671a-41f8-ae46-d3fda4dfea5d.png)
+
 
 ## from TS to :
 
 -   [x] JSON Schema
 -   [x] OpenAPI
 -   [x] Zod
--   [ ] TODO: Suretype ?
 
-## to TS (?) :
+## from OpenAPI to :
 
--   [ ] TODO: zod
--   [ ] TODO: suretype
--   [ ] TODO: JSON Schema
--   [ ] TODO: OpenAPi
+-   [x] Typescript
+-   [x] JSON Schema
+-   [x] Zod
+
+## from JSON Schema to :
+
+-   [x] Typescript
+-   [x] OpenAPI
+-   [x] Zod
 
 ### Stack
 
