@@ -1,24 +1,38 @@
 import { Monaco } from "@monaco-editor/react";
 import type { OpenAPIWriterOptions } from "@transformer/backend/src";
+import { atom } from "jotai";
 import type * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { proxy } from "valtio";
 import { tsDefaultValue } from "./tsDefaultValue";
 
 export const localCache = new Map();
-export const textsProxy = proxy({ ts: tsDefaultValue, jsonSchema: "", openApi: "", zod: "" });
-export const prevDefault = {
+
+const defaultTexts = {
     ts: null as unknown as string,
     jsonSchema: null as unknown as string,
     openApi: null as unknown as string,
     zod: null as unknown as string,
 };
-export const prevTextsProxy = proxy(prevDefault);
+export const textsProxy = proxy({
+    source: "ts" as OutputDestination,
+    ts: tsDefaultValue,
+    jsonSchema: "",
+    openApi: "",
+    zod: "",
+});
+
+export type OutputDestination = keyof typeof defaultTexts;
+export const destinationsAtom = atom<OutputDestination[]>(["openApi", "zod"] as OutputDestination[]);
+export const sourceAtom = atom<OutputDestination>("ts");
+export const sourceOptions: OutputDestination[] = ["ts", "jsonSchema", "openApi"];
+
+export const prevTextsProxy = proxy(defaultTexts);
 
 const resetPrevTexts = () => {
-    prevTextsProxy.ts = prevDefault.ts;
-    prevTextsProxy.jsonSchema = prevDefault.jsonSchema;
-    prevTextsProxy.openApi = prevDefault.openApi;
-    prevTextsProxy.zod = prevDefault.zod;
+    prevTextsProxy.ts = defaultTexts.ts;
+    prevTextsProxy.jsonSchema = defaultTexts.jsonSchema;
+    prevTextsProxy.openApi = defaultTexts.openApi;
+    prevTextsProxy.zod = defaultTexts.zod;
 };
 export const clearTexts = () => {
     resetPrevTexts();
@@ -29,6 +43,7 @@ export const clearTexts = () => {
 };
 export const resetToDefault = () => {
     resetPrevTexts();
+    textsProxy.source = "ts";
     textsProxy.ts = tsDefaultValue;
     editorRefs.ts?.setValue(tsDefaultValue);
 };

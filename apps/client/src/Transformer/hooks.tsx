@@ -11,6 +11,18 @@ const mutationNameToEditorRefName = (name: TMutation) =>
             tsToOapi: "openApi",
             tsToJsonSchema: "jsonSchema",
             tsToZod: "zod",
+            //
+            openApiToJsonSchema: "jsonSchema",
+            openApiToTs: "ts",
+            openApiToZod: "zod",
+            //
+            jsonSchemaToTs: "ts",
+            jsonSchemaToZod: "zod",
+            jsonSchemaToOpenApi: "openApi",
+            //
+            // zodToTs: "ts",
+            // zodToOpenApi: "openApi",
+            // zodToJsonSchema: "jsonSchema",
         } as const
     )[name]);
 
@@ -19,7 +31,12 @@ function makeTransformerMutationHook(name: TMutation) {
         trpc.useMutation(name, {
             mutationKey: name,
             onSuccess: (result, input) => {
-                const value = isType<InferMutationInput<"tsToOapi">>(input, name === "tsToOapi") ? input.value : input;
+                const value = isType<InferMutationInput<"tsToOapi" | "jsonSchemaToOpenApi">>(
+                    input,
+                    name === "tsToOapi" || name === "jsonSchemaToOpenApi"
+                )
+                    ? input.value
+                    : input;
                 localCache.set(`${name}-${hashCode(value)}`, result);
 
                 const refName = mutationNameToEditorRefName(name)!;
@@ -40,3 +57,13 @@ function makeTransformerMutationHook(name: TMutation) {
 export const useTsToOapi = makeTransformerMutationHook("tsToOapi");
 export const useTsToJsonSchema = makeTransformerMutationHook("tsToJsonSchema");
 export const useTsToZod = makeTransformerMutationHook("tsToZod");
+
+export const useOpenApiToTs = makeTransformerMutationHook("openApiToTs");
+export const useOpenApiToJsonSchema = makeTransformerMutationHook("openApiToJsonSchema");
+export const useOpenApiToZod = makeTransformerMutationHook("openApiToZod");
+
+export const useJsonSchemaToOpenApi = makeTransformerMutationHook("jsonSchemaToOpenApi");
+export const useJsonSchemaToTs = makeTransformerMutationHook("jsonSchemaToTs");
+export const useJsonSchemaToZod = makeTransformerMutationHook("jsonSchemaToTs");
+
+// export const useZodToTs = makeTransformerMutationHook("zodToTs");
